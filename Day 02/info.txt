@@ -1,1 +1,48 @@
+# ---------------------------------------------------------------
+# PASS-THROUGH RERANKING
+# ---------------------------------------------------------------
 
+def cross_encoder_rerank(
+    query: str,
+    candidates: list,
+    top_k: int = 5
+) -> list:
+    """
+    Pass through the candidates without using a cross-encoder.
+
+    Keeps the same function interface so the next steps
+    in the pipeline continue to work.
+
+    Args:
+        query      : original user question (kept for compatibility).
+        candidates : list of (Document, score) tuples.
+        top_k      : how many documents to return.
+
+    Returns:
+        List of (Document, score) tuples.
+    """
+    if not candidates:
+        return []
+
+    return candidates[:top_k]
+
+
+# Smoke test
+print("[RERANK] Smoke test: 'What is RAG?'")
+fused_candidates = multi_retrieve(
+    "What is RAG?",
+    top_k_each=10,
+    verbose=False
+)
+
+reranked = cross_encoder_rerank(
+    "What is RAG?",
+    fused_candidates,
+    top_k=5
+)
+
+for rank, (doc, score) in enumerate(reranked, 1):
+    print(
+        f"  Rank {rank} | Score={float(score):.4f} | "
+        f"{doc.page_content[:90]}..."
+    )
